@@ -1,7 +1,7 @@
 ﻿using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
 
-namespace CheckPointAdmin.Models
+namespace CheckPointClient.Models
 {
     [Table("Tanulok")]
     public class Tanulo : BaseModel

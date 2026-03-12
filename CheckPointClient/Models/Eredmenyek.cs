@@ -2,7 +2,7 @@
 using Supabase.Postgrest.Models;
 
 
-namespace CheckPointAdmin.Models
+namespace CheckPointClient.Models
 {
     [Table("Eredmenyek")]
     public class Eredmeny : BaseModel
