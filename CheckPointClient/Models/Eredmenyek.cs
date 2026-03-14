@@ -27,5 +27,8 @@ namespace CheckPointClient.Models
 
         [Column("Kitoltve")]
         public DateTime Kitoltve { get; set; } = DateTime.Now;
+
+        [Column("Befejezve")]
+        public bool Befejezve { get; set; } = false;
     }
 }
