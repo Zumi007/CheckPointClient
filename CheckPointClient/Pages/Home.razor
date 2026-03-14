@@ -18,7 +18,7 @@
                             <div class="display-1 text-primary mb-3">
                                 <i class="bi bi-person-circle"></i>
                             </div>
-                            <h2 class="fw-bold">CheckPoint</h2>
+                            <h2 class="fw-bold text-light">CheckPoint</h2>
                             <p class="text-muted small">Tanulói belépés</p>
                         </div>
 
@@ -26,8 +26,8 @@
                             <label class="form-label small text-muted text-uppercase fw-bold">Felhasználónév</label>
                             <div class="input-group shadow-sm">
                                 <span class="input-group-text bg-dark border-secondary text-muted"><i class="bi bi-person"></i></span>
-                                <input type="text" class="form-control bg-dark text-white border-secondary shadow-none" 
-                                       @bind="loginName" @bind:event="oninput" @onkeyup="HandleKeyUp" 
+                                <input type="text" class="form-control bg-dark text-white border-secondary shadow-none"
+                                       @bind="loginName" @bind:event="oninput" @onkeyup="HandleKeyUp"
                                        placeholder="Felhasználónév..." />
                             </div>
                         </div>
@@ -36,15 +36,22 @@
                             <label class="form-label small text-muted text-uppercase fw-bold">Jelszó</label>
                             <div class="input-group shadow-sm">
                                 <span class="input-group-text bg-dark border-secondary text-muted"><i class="bi bi-key"></i></span>
-                                <input type="password" class="form-control bg-dark text-white border-secondary shadow-none" 
-                                       @bind="password" @bind:event="oninput" @onkeyup="HandleKeyUp" 
+                                <input type="password" class="form-control bg-dark text-white border-secondary shadow-none"
+                                       @bind="password" @bind:event="oninput" @onkeyup="HandleKeyUp"
                                        placeholder="Jelszó..." />
                             </div>
                         </div>
 
                         <button class="btn btn-primary btn-lg w-100 fw-bold shadow-sm" @onclick="Login" disabled="@isBusy">
-                            @if (isBusy) { <span class="spinner-border spinner-border-sm me-2"></span> }
-                            else { <span><i class="bi bi-box-arrow-in-right me-2"></i>Belépés</span> }
+                            @if (isBusy)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                            }
+                            else
+                            {
+
+                                <span><i class="bi bi-box-arrow-in-right me-2"></i>Belépés</span>
+                            }
                         </button>
 
                         @if (!string.IsNullOrEmpty(statuszUzenet))
@@ -64,10 +71,10 @@
     }
     else if (aktivTesztId == null)
     {
-        <!-- 2. DASHBOARD (TESZTLISTA) -->
+        <!-- 2. DASHBOARD (ELÉRHETŐ TESZTEK) -->
         <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-dark bg-opacity-50 rounded border border-secondary shadow-sm">
             <div>
-                <h4 class="mb-0">Szia, <span class="text-primary fw-bold">@bejelentkezettTanulo.Nev</span>!</h4>
+                <h4 class="mb-0 text-light">Szia, <span class="text-primary fw-bold">@bejelentkezettTanulo.Nev</span>!</h4>
                 <p class="text-muted small mb-0">Aktuális feladatok | <span class="text-secondary">@AppVersion</span></p>
             </div>
             <div class="d-flex gap-2">
@@ -100,7 +107,7 @@
                 @foreach (var elem in kiosztottAdatok)
                 {
                     <div class="col-md-6">
-                        <div class="card h-100 border-secondary hover-scale shadow-sm animate-fade">
+                        <div class="card h-100 bg-dark border-secondary hover-scale shadow-sm animate-fade">
                             <div class="card-body p-4">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                     <h5 class="card-title fw-bold text-info mb-0">@elem.Teszt.TesztCime</h5>
@@ -112,12 +119,12 @@
                                     }
                                 </div>
                                 <p class="card-text text-muted mb-4 small">@elem.Teszt.Leiras</p>
-                                
+
                                 <div class="d-grid gap-2">
                                     @if (elem.UtolsoEredmeny == null || !elem.UtolsoEredmeny.Befejezve)
                                     {
                                         <button class="btn btn-success py-2 shadow-sm fw-bold" @onclick="() => StartTeszt(elem)">
-                                            <i class="bi @(elem.UtolsoEredmeny == null ? "bi-play-fill" : "bi-arrow-repeat") me-1"></i> 
+                                            <i class="bi @(elem.UtolsoEredmeny == null ? "bi-play-fill" : "bi-arrow-repeat") me-1"></i>
                                             @(elem.UtolsoEredmeny == null ? "Teszt indítása" : "Kitöltés folytatása")
                                         </button>
                                     }
@@ -126,7 +133,7 @@
                                         <button class="btn btn-outline-secondary py-2 fw-bold" disabled>
                                             <i class="bi bi-check2-all me-1"></i> Már kitöltötted
                                         </button>
-                                        
+
                                         @if (elem.Kiosztas.VegeredmenyLathato)
                                         {
                                             <button class="btn btn-warning py-2 fw-bold shadow-sm" @onclick="() => StartReview(elem)">
@@ -135,7 +142,7 @@
                                         }
                                         else
                                         {
-                                            <div class="text-center small text-muted mt-1 bg-dark bg-opacity-50 p-2 rounded">
+                                            <div class="text-center small text-muted mt-1 bg-dark bg-opacity-50 p-2 rounded border border-secondary border-opacity-25">
                                                 <i class="bi bi-lock-fill me-1"></i> Megoldások zárolva
                                             </div>
                                         }
@@ -155,77 +162,84 @@
             <div class="col-lg-8">
                 @if (kerdesek == null)
                 {
-                    <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary"></div>
+                        <p class="mt-2 text-muted">Kérdések betöltése...</p>
+                    </div>
                 }
                 else if (isFinished || viewModeOnly)
                 {
-                    <div class="card text-center p-5 border-success shadow-lg animate-fade">
-                        <div class="mb-4">
-                            <i class="bi @(viewModeOnly ? "bi-search" : "bi-check-circle-fill") text-success display-1"></i>
-                        </div>
-                        <h2 class="fw-bold">@(viewModeOnly ? "Áttekintés" : "Befejezve!")</h2>
-                        <hr class="my-4 border-secondary opacity-25">
-
-                        <div class="row mb-4 align-items-center">
-                            <div class="col-md-4 text-center border-end border-secondary">
-                                <div class="text-muted small text-uppercase">Pont</div>
-                                <div class="display-6 fw-bold text-primary">@pontszam / @kerdesek.Count</div>
+                    <!-- KIÉRTÉKELÉS KÉPERNYŐ -->
+                    <div class="card bg-dark border-success shadow-lg animate-fade">
+                        <div class="card-body p-5 text-center">
+                            <div class="mb-4">
+                                <i class="bi @(viewModeOnly ? "bi-search" : "bi-check-circle-fill") text-success display-1"></i>
                             </div>
-                            <div class="col-md-4 text-center border-end border-secondary">
-                                <div class="text-muted small text-uppercase">Eredmény</div>
-                                <div class="display-6 fw-bold text-success">@GetSzazalek()%</div>
+                            <h2 class="fw-bold text-light">@(viewModeOnly ? "Áttekintés" : "Befejezve!")</h2>
+                            <hr class="my-4 border-secondary opacity-25">
+
+                            <div class="row mb-4 align-items-center">
+                                <div class="col-md-4 text-center border-end border-secondary">
+                                    <div class="text-muted small text-uppercase">Pont</div>
+                                    <div class="display-6 fw-bold text-primary">@pontszam / @kerdesek.Count</div>
+                                </div>
+                                <div class="col-md-4 text-center border-end border-secondary">
+                                    <div class="text-muted small text-uppercase">Eredmény</div>
+                                    <div class="display-6 fw-bold text-success">@GetSzazalek()%</div>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <div class="text-muted small text-uppercase">Érdemjegy</div>
+                                    <div class="display-4 fw-bold @GetGradeColorClass()">@GetGradeNumber()</div>
+                                </div>
                             </div>
-                            <div class="col-md-4 text-center">
-                                <div class="text-muted small text-uppercase">Érdemjegy</div>
-                                <div class="display-4 fw-bold @GetGradeColorClass()">@GetGradeNumber()</div>
+
+                            <div class="d-flex justify-content-center gap-3">
+                                <button class="btn btn-outline-warning shadow-sm" @onclick="() => showReview = !showReview">
+                                    <i class="bi @(showReview ? "bi-eye-slash" : "bi-eye") me-2"></i>
+                                    @(showReview ? "Részletek elrejtése" : "Válaszok ellenőrzése")
+                                </button>
+                                <button class="btn btn-primary px-5 shadow-sm" @onclick="ResetToDashboard">
+                                    Vissza a kezdőlapra
+                                </button>
                             </div>
-                        </div>
 
-                        <div class="d-flex justify-content-center gap-3">
-                            <button class="btn btn-outline-warning shadow-sm" @onclick="() => showReview = !showReview">
-                                <i class="bi @(showReview ? "bi-eye-slash" : "bi-eye") me-2"></i>
-                                @(showReview ? "Részletek elrejtése" : "Válaszok ellenőrzése")
-                            </button>
-                            <button class="btn btn-primary px-5 shadow-sm" @onclick="ResetToDashboard">
-                                Vissza a kezdőlapra
-                            </button>
-                        </div>
+                            @if (showReview)
+                            {
+                                <div class="text-start border-top border-secondary pt-4 mt-4 animate-fade">
+                                    @foreach (var q in kerdesek)
+                                    {
+                                        long vId = adottValaszok.ContainsKey(q.KerdesId) ? adottValaszok[q.KerdesId] :
+                                        (korabbiValaszok.ContainsKey(q.KerdesId) ? korabbiValaszok[q.KerdesId] : -1);
+                                        var vObj = valaszok?.FirstOrDefault(v => v.ValaszId == vId);
+                                        bool helyes = vObj?.Helyes ?? false;
 
-                        @if (showReview)
-                        {
-                            <div class="text-start border-top border-secondary pt-4 mt-4 animate-fade">
-                                @foreach (var q in kerdesek)
-                                {
-                                    long vId = adottValaszok.ContainsKey(q.KerdesId) ? adottValaszok[q.KerdesId] : 
-                                               (korabbiValaszok.ContainsKey(q.KerdesId) ? korabbiValaszok[q.KerdesId] : -1);
-                                    var vObj = valaszok?.FirstOrDefault(v => v.ValaszId == vId);
-                                    bool helyes = vObj?.Helyes ?? false;
-
-                                    <div class="card bg-dark @(helyes ? "border-success border-opacity-25" : "border-danger border-opacity-25") mb-3 shadow-sm">
-                                        <div class="card-body">
-                                            <p class="fw-bold mb-3">@q.KerdesSzoveg</p>
-                                            <div class="p-2 mb-2 @(helyes ? "bg-success" : "bg-danger") bg-opacity-10 border rounded small">
-                                                <strong>Válaszod:</strong> @(vObj?.ValaszSzoveg ?? "Nem érkezett válasz")
-                                            </div>
-                                            @if (!helyes)
-                                            {
-                                                <div class="p-2 bg-success bg-opacity-10 border border-success border-opacity-25 rounded text-success small mt-2">
-                                                    <strong>Helyes megoldás:</strong> @(valaszok?.FirstOrDefault(v => v.KerdesId == q.KerdesId && v.Helyes)?.ValaszSzoveg ?? "---")
+                                        <div class="card bg-black bg-opacity-25 @(helyes ? "border-success border-opacity-25" : "border-danger border-opacity-25") mb-3 shadow-sm">
+                                            <div class="card-body">
+                                                <p class="fw-bold mb-3 text-light">@q.KerdesSzoveg</p>
+                                                <div class="p-2 mb-2 @(helyes ? "bg-success" : "bg-danger") bg-opacity-10 border rounded small">
+                                                    <strong class="text-light">Te válaszod:</strong> <span class="text-light">@(vObj?.ValaszSzoveg ?? "Nem érkezett válasz")</span>
                                                 </div>
-                                            }
+                                                @if (!helyes)
+                                                {
+                                                    <div class="p-2 bg-success bg-opacity-10 border border-success border-opacity-25 rounded text-success small mt-2">
+                                                        <strong>Helyes válasz:</strong> @(valaszok?.FirstOrDefault(v => v.KerdesId == q.KerdesId && v.Helyes)?.ValaszSzoveg ?? "---")
+                                                    </div>
+                                                }
+                                            </div>
                                         </div>
-                                    </div>
-                                }
-                            </div>
-                        }
+                                    }
+                                </div>
+                            }
+                        </div>
                     </div>
                 }
                 else
                 {
+                    <!-- KITÖLTÉSI NÉZET -->
                     var q = kerdesek[currentStep];
                     bool marMegvalaszolva = korabbiValaszok.ContainsKey(q.KerdesId) || adottValaszok.ContainsKey(q.KerdesId);
 
-                    <div class="card border-secondary shadow-lg overflow-hidden animate-fade">
+                    <div class="card bg-dark border-secondary shadow-lg overflow-hidden animate-fade">
                         <div class="progress rounded-0" style="height: 8px;">
                             <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
                                  style="width: @((currentStep + 1.0) / kerdesek.Count * 100)%"></div>
@@ -235,25 +249,28 @@
                             <span class="badge bg-secondary">Kitöltés folyamatban</span>
                         </div>
                         <div class="card-body p-4 p-md-5">
-                            <h3 class="mb-5 fw-bold">@q.KerdesSzoveg</h3>
+                            <h3 class="mb-5 fw-bold text-light">@q.KerdesSzoveg</h3>
                             <div class="d-grid gap-3">
                                 @foreach (var v in MegjelenitendoValaszok(q.KerdesId))
                                 {
-                                    bool selected = (korabbiValaszok.ContainsKey(q.KerdesId) && korabbiValaszok[q.KerdesId] == v.ValaszId) || 
-                                                    (adottValaszok.ContainsKey(q.KerdesId) && adottValaszok[q.KerdesId] == v.ValaszId);
-                                    
-                                    <button class="btn @(selected ? "btn-primary shadow" : "btn-outline-secondary") text-start p-3 fs-5 transition-all" 
+                                    bool selected = (korabbiValaszok.ContainsKey(q.KerdesId) && korabbiValaszok[q.KerdesId] == v.ValaszId) ||
+                                    (adottValaszok.ContainsKey(q.KerdesId) && adottValaszok[q.KerdesId] == v.ValaszId);
+
+                                    <button class="btn @(selected ? "btn-primary shadow" : "btn-outline-secondary") text-start p-3 fs-5 transition-all"
                                             @onclick="() => SubmitAnswer(q.KerdesId, v)" disabled="@marMegvalaszolva">
                                         <div class="d-flex align-items-center">
                                             <div class="me-3 fs-4"><i class="bi @(selected ? "bi-check-circle-fill" : "bi-circle")"></i></div>
-                                            <div>@v.ValaszSzoveg</div>
+                                            <div class="text-light">@v.ValaszSzoveg</div>
                                         </div>
                                     </button>
                                 }
                             </div>
-                            @if (marMegvalaszolva) {
+                            @if (marMegvalaszolva)
+                            {
                                 <div class="mt-5 d-flex justify-content-end">
-                                    <button class="btn btn-primary btn-lg px-5 shadow animate-fade" @onclick="NextStep">Következő <i class="bi bi-arrow-right ms-2"></i></button>
+                                    <button class="btn btn-primary btn-lg px-5 shadow animate-fade" @onclick="NextStep">
+                                        Következő <i class="bi bi-arrow-right ms-2"></i>
+                                    </button>
                                 </div>
                             }
                         </div>
@@ -265,21 +282,45 @@
 </div>
 
 <style>
-    .animate-fade { animation: fadeIn 0.4s ease-out; }
-    @@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .hover-scale { transition: transform 0.2s; }
-    .hover-scale:hover { transform: scale(1.01); cursor: pointer; }
-    .transition-all { transition: all 0.2s ease-in-out; }
+    .animate-fade {
+        animation: fadeIn 0.4s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .hover-scale {
+        transition: transform 0.2s;
+    }
+
+        .hover-scale:hover {
+            transform: scale(1.01);
+            cursor: pointer;
+        }
+
+    .transition-all {
+        transition: all 0.2s ease-in-out;
+    }
 </style>
 
 @code {
-    private string AppVersion = "v1.0.5-client";
+    private string AppVersion = "v1.0.7-client";
     private Tanulo? bejelentkezettTanulo;
     private string loginName = "", password = "", statuszUzenet = "";
     private bool isBusy = false, isFinished = false, showReview = false, viewModeOnly = false, vegeredmenyLathato = false;
     private bool kerdesekVeletlen = false, valaszokVeletlen = false;
 
-    private class KiosztasAdat {
+    private class KiosztasAdat
+    {
         public Teszt Teszt { get; set; } = null!;
         public Kiosztas Kiosztas { get; set; } = null!;
         public Eredmeny? UtolsoEredmeny { get; set; }
@@ -291,113 +332,107 @@
     private List<Kerdes>? kerdesek;
     private List<Valasz>? valaszok;
     private int currentStep = 0, pontszam = 0;
-    
+
     private Dictionary<long, long> adottValaszok = new();
-    private Dictionary<long, long> korabbiValaszok = new(); 
+    private Dictionary<long, long> korabbiValaszok = new();
     private Dictionary<long, List<Valasz>> kevertValaszokCache = new();
 
-    // Érdemjegy és százalék számítás
     private int GetSzazalek() => kerdesek != null && kerdesek.Count > 0 ? (int)Math.Round((decimal)pontszam / kerdesek.Count * 100) : 0;
-    private int GetGradeNumber() {
+    private int GetGradeNumber()
+    {
         var sz = GetSzazalek();
         if (sz >= 85) return 5; if (sz >= 70) return 4; if (sz >= 55) return 3; if (sz >= 40) return 2; return 1;
     }
     private string GetGradeColorClass() => GetGradeNumber() switch { 5 => "text-success", 4 => "text-info", 3 => "text-primary", 2 => "text-warning", _ => "text-danger" };
 
-    // Login Enter billentyűvel
     private async Task HandleKeyUp(KeyboardEventArgs e) { if (e.Key == "Enter") await Login(); }
 
-    private async Task Login() {
+    private async Task Login()
+    {
         if (string.IsNullOrWhiteSpace(loginName) || string.IsNullOrWhiteSpace(password)) { statuszUzenet = "Mezők kitöltése kötelező!"; return; }
         isBusy = true; statuszUzenet = "";
-        try {
+        try
+        {
             var resp = await Db.From<Tanulo>().Filter("Login", Operator.Equals, loginName).Filter("Jelszo", Operator.Equals, password).Filter("Aktiv", Operator.Equals, "true").Get();
             bejelentkezettTanulo = resp.Models.FirstOrDefault();
-            if (bejelentkezettTanulo != null) await LoadTests(); else statuszUzenet = "Hibás adatok!";
-        } catch { statuszUzenet = "Hiba a kapcsolódáskor."; } finally { isBusy = false; }
+            if (bejelentkezettTanulo != null && bejelentkezettTanulo.TanuloId > 0) await LoadTests(); else statuszUzenet = "Hibás adatok!";
+        }
+        catch { statuszUzenet = "Kapcsolódási hiba a szerverrel."; }
+        finally { isBusy = false; }
     }
 
-    private void Logout() { 
-        bejelentkezettTanulo = null; 
-        kiosztottAdatok = null; 
-        loginName = ""; 
-        password = ""; 
-    }
+    private void Logout() { bejelentkezettTanulo = null; kiosztottAdatok = null; loginName = ""; password = ""; }
 
-    private async Task LoadTests() {
+    private async Task LoadTests()
+    {
         if (bejelentkezettTanulo == null) return;
         isBusy = true;
-        try {
+        try
+        {
             var kResp = await Db.From<Kiosztas>().Filter("Csoport_id", Operator.Equals, bejelentkezettTanulo.CsoportId.ToString()).Filter("Aktiv", Operator.Equals, "true").Get();
             var tResp = await Db.From<Teszt>().Get();
             var eResp = await Db.From<Eredmeny>().Filter("Tanulo_id", Operator.Equals, bejelentkezettTanulo.TanuloId.ToString()).Get();
 
-            kiosztottAdatok = kResp.Models.Select(k => new KiosztasAdat {
+            kiosztottAdatok = kResp.Models.Select(k => new KiosztasAdat
+            {
                 Kiosztas = k,
                 Teszt = tResp.Models.FirstOrDefault(t => t.TesztId == k.TesztId) ?? new Teszt { TesztCime = "Ismeretlen" },
                 UtolsoEredmeny = eResp.Models.Where(e => e.TesztId == k.TesztId).OrderByDescending(e => e.Kitoltve).FirstOrDefault()
             }).ToList();
-        } catch { kiosztottAdatok = new List<KiosztasAdat>(); }
+        }
+        catch { kiosztottAdatok = new List<KiosztasAdat>(); }
         finally { isBusy = false; StateHasChanged(); }
     }
 
-    private async Task StartTeszt(KiosztasAdat elem) {
-        viewModeOnly = false; showReview = false;
-        await InitTesztMotor(elem);
-    }
+    private async Task StartTeszt(KiosztasAdat elem) { viewModeOnly = false; showReview = false; await InitTesztMotor(elem); }
+    private async Task StartReview(KiosztasAdat elem) { viewModeOnly = true; showReview = true; await InitTesztMotor(elem); }
 
-    private async Task StartReview(KiosztasAdat elem) {
-        viewModeOnly = true; showReview = true;
-        await InitTesztMotor(elem);
-    }
-
-    private async Task InitTesztMotor(KiosztasAdat elem) {
+    private async Task InitTesztMotor(KiosztasAdat elem)
+    {
         aktivTesztId = elem.Teszt.TesztId;
         vegeredmenyLathato = elem.Kiosztas.VegeredmenyLathato;
         kerdesekVeletlen = elem.Kiosztas.KerdesekVeletlen;
         valaszokVeletlen = elem.Kiosztas.ValaszokVeletlen;
-        currentStep = 0; pontszam = 0; isFinished = false; 
+        currentStep = 0; pontszam = 0; isFinished = false;
         adottValaszok.Clear(); korabbiValaszok.Clear(); kevertValaszokCache.Clear();
 
         var kResp = await Db.From<Kerdes>().Filter("Teszt_id", Operator.Equals, elem.Teszt.TesztId.ToString()).Get();
+        kerdesek = kResp.Models;
         var vResp = await Db.From<Valasz>().Get();
         valaszok = vResp.Models;
 
-        // Kérdések keverése
-        var tempKerdesek = kResp.Models;
-        if (kerdesekVeletlen && !viewModeOnly) {
+        if (kerdesekVeletlen && !viewModeOnly)
+        {
             var rnd = new Random();
-            tempKerdesek = tempKerdesek.OrderBy(x => rnd.Next()).ToList();
+            kerdesek = kerdesek.OrderBy(x => rnd.Next()).ToList();
         }
-        kerdesek = tempKerdesek;
 
-        // Ha van korábbi eredmény (akár befejezetlen), töltsük be az eddigi válaszokat
-        if (elem.UtolsoEredmeny != null) {
+        if (elem.UtolsoEredmeny != null)
+        {
             aktualisEredmenyId = elem.UtolsoEredmeny.EredmenyId;
             var dvResp = await Db.From<DiakValasz>().Filter("Eredmeny_id", Operator.Equals, elem.UtolsoEredmeny.EredmenyId.ToString()).Get();
-            foreach (var dv in dvResp.Models) {
+            foreach (var dv in dvResp.Models)
+            {
                 korabbiValaszok[dv.KerdesId] = dv.ValasztottValaszId;
                 if (valaszok.FirstOrDefault(x => x.ValaszId == dv.ValasztottValaszId)?.Helyes == true) pontszam++;
             }
-            
-            // Folytatás esetén keressük meg a legelső megválaszolatlan kérdést
-            if (!viewModeOnly && !elem.UtolsoEredmeny.Befejezve) {
-                for (int i = 0; i < kerdesek.Count; i++) {
-                    if (!korabbiValaszok.ContainsKey(kerdesek[i].KerdesId)) {
-                        currentStep = i;
-                        break;
-                    }
+            if (!viewModeOnly && !elem.UtolsoEredmeny.Befejezve)
+            {
+                for (int i = 0; i < kerdesek.Count; i++)
+                {
+                    if (!korabbiValaszok.ContainsKey(kerdesek[i].KerdesId)) { currentStep = i; break; }
                 }
             }
-        } else {
-            aktualisEredmenyId = null;
         }
+        else { aktualisEredmenyId = null; }
     }
 
-    private List<Valasz> MegjelenitendoValaszok(long kid) {
+    private List<Valasz> MegjelenitendoValaszok(long kid)
+    {
         if (kevertValaszokCache.ContainsKey(kid)) return kevertValaszokCache[kid];
         var vList = valaszok?.Where(x => x.KerdesId == kid).ToList() ?? new List<Valasz>();
-        if (valaszokVeletlen && !viewModeOnly) {
+        if (valaszokVeletlen && !viewModeOnly)
+        {
             var rnd = new Random();
             vList = vList.OrderBy(x => rnd.Next()).ToList();
         }
@@ -405,60 +440,68 @@
         return vList;
     }
 
-    private async Task SubmitAnswer(long qId, Valasz v) {
-        if (viewModeOnly) return;
+    private async Task SubmitAnswer(long qId, Valasz v)
+    {
+        if (viewModeOnly || bejelentkezettTanulo == null) return;
         adottValaszok[qId] = v.ValaszId;
         if (v.Helyes) pontszam++;
 
-        // Inkrementális mentés az adatbázisba minden válasz után
-        if (aktualisEredmenyId == null) {
-            var ujEredmeny = new Eredmeny { 
-                TanuloId = bejelentkezettTanulo!.TanuloId, 
-                TesztId = aktivTesztId!.Value, 
-                Pontszam = pontszam, 
-                OsszKerdes = kerdesek!.Count, 
-                Szazalek = GetSzazalek(), 
-                Befejezve = false 
+        // JAVÍTÁS: Update hívásnál is átadjuk az FK azonosítókat (TanuloId, TesztId)
+        if (aktualisEredmenyId == null)
+        {
+            var ujEredmeny = new Eredmeny
+            {
+                TanuloId = bejelentkezettTanulo.TanuloId,
+                TesztId = aktivTesztId!.Value,
+                Pontszam = pontszam,
+                OsszKerdes = kerdesek!.Count,
+                Szazalek = GetSzazalek(),
+                Befejezve = false
             };
             var resp = await Db.From<Eredmeny>().Insert(ujEredmeny);
             aktualisEredmenyId = resp.Model.EredmenyId;
-        } else {
-            var frissit = new Eredmeny { 
-                EredmenyId = aktualisEredmenyId.Value, 
-                Pontszam = pontszam, 
-                OsszKerdes = kerdesek!.Count, 
-                Szazalek = GetSzazalek(), 
-                Befejezve = false 
+        }
+        else
+        {
+            var frissit = new Eredmeny
+            {
+                EredmenyId = aktualisEredmenyId.Value,
+                TanuloId = bejelentkezettTanulo.TanuloId, // <--- Fontos a Foreign Key kényszer miatt!
+                TesztId = aktivTesztId!.Value,             // <--- Fontos a Foreign Key kényszer miatt!
+                Pontszam = pontszam,
+                OsszKerdes = kerdesek!.Count,
+                Szazalek = GetSzazalek(),
+                Befejezve = false
             };
             await Db.From<Eredmeny>().Update(frissit);
         }
 
-        // Egyedi diák válasz rögzítése
-        await Db.From<DiakValasz>().Insert(new DiakValasz { 
-            EredmenyId = aktualisEredmenyId.Value, 
-            KerdesId = qId, 
-            ValasztottValaszId = v.ValaszId 
+        await Db.From<DiakValasz>().Insert(new DiakValasz
+        {
+            EredmenyId = aktualisEredmenyId.Value,
+            KerdesId = qId,
+            ValasztottValaszId = v.ValaszId
         });
     }
 
     private async Task NextStep() { if (currentStep < kerdesek!.Count - 1) currentStep++; else await Finish(); }
 
-    private async Task Finish() {
+    private async Task Finish()
+    {
         isFinished = true;
-        if (aktualisEredmenyId != null) {
-            // Teszt lezárása: Befejezve állapota és végleges időpont mentése
-            var vegEredmeny = new Eredmeny { 
-                EredmenyId = aktualisEredmenyId.Value, 
-                Befejezve = true, 
-                Kitoltve = DateTime.Now 
+        if (aktualisEredmenyId != null && bejelentkezettTanulo != null)
+        {
+            var vegEredmeny = new Eredmeny
+            {
+                EredmenyId = aktualisEredmenyId.Value,
+                TanuloId = bejelentkezettTanulo.TanuloId,
+                TesztId = aktivTesztId!.Value,
+                Befejezve = true,
+                Kitoltve = DateTime.Now
             };
             await Db.From<Eredmeny>().Update(vegEredmeny);
         }
     }
 
-    private void ResetToDashboard() { 
-        aktivTesztId = null; 
-        aktualisEredmenyId = null; 
-        LoadTests(); 
-    }
+    private void ResetToDashboard() { aktivTesztId = null; aktualisEredmenyId = null; LoadTests(); }
 }

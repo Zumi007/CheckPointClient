@@ -7,6 +7,7 @@ namespace CheckPointClient.Models
     public class Tanulo : BaseModel
     {
         [PrimaryKey("Tanulo_id", false)]
+        [Column("Tanulo_id")]
         public long TanuloId { get; set; }
 
         [Column("Csoport_id")]
