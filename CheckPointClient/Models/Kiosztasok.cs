@@ -26,5 +26,11 @@ namespace CheckPointClient.Models
 
         [Column("VegeredmenyLathato")]
         public bool VegeredmenyLathato { get; set; } = false;
+
+        [Column("KerdesekVeletlen")]
+        public bool KerdesekVeletlen { get; set; } = false;
+
+        [Column("ValaszokVeletlen")]
+        public bool ValaszokVeletlen { get; set; } = false;
     }
 }
