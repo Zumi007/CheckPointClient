@@ -235,8 +235,9 @@
                 }
                 else
                 {
-                    <!-- KITÖLTÉSI NÉZET (AUTOMATIKUS LÉPTETÉSSEL) -->
+                    <!-- KITÖLTÉSI NÉZET -->
                     var q = kerdesek[currentStep];
+                    bool marMegvalaszolva = korabbiValaszok.ContainsKey(q.KerdesId) || adottValaszok.ContainsKey(q.KerdesId);
 
                     <div class="card bg-dark border-secondary shadow-lg overflow-hidden animate-fade">
                         <div class="progress rounded-0" style="height: 8px;">
@@ -252,15 +253,26 @@
                             <div class="d-grid gap-3">
                                 @foreach (var v in MegjelenitendoValaszok(q.KerdesId))
                                 {
-                                    <button class="btn btn-outline-secondary text-start p-3 fs-5 transition-all @(isBusy ? "opacity-50" : "")"
-                                            @onclick="() => SubmitAnswer(q.KerdesId, v)" disabled="@isBusy">
+                                    bool selected = (korabbiValaszok.ContainsKey(q.KerdesId) && korabbiValaszok[q.KerdesId] == v.ValaszId) ||
+                                    (adottValaszok.ContainsKey(q.KerdesId) && adottValaszok[q.KerdesId] == v.ValaszId);
+
+                                    <button class="btn @(selected ? "btn-primary shadow" : "btn-outline-secondary") text-start p-3 fs-5 transition-all"
+                                            @onclick="() => SubmitAnswer(q.KerdesId, v)" disabled="@marMegvalaszolva">
                                         <div class="d-flex align-items-center">
-                                            <div class="me-3 fs-4"><i class="bi bi-circle"></i></div>
+                                            <div class="me-3 fs-4"><i class="bi @(selected ? "bi-check-circle-fill" : "bi-circle")"></i></div>
                                             <div class="text-light">@v.ValaszSzoveg</div>
                                         </div>
                                     </button>
                                 }
                             </div>
+                            @if (marMegvalaszolva)
+                            {
+                                <div class="mt-5 d-flex justify-content-end">
+                                    <button class="btn btn-primary btn-lg px-5 shadow animate-fade" @onclick="NextStep">
+                                        Következő <i class="bi bi-arrow-right ms-2"></i>
+                                    </button>
+                                </div>
+                            }
                         </div>
                     </div>
                 }
@@ -301,7 +313,7 @@
 </style>
 
 @code {
-    private string AppVersion = "v1.0.9-client";
+    private string AppVersion = "v1.0.7-client";
     private Tanulo? bejelentkezettTanulo;
     private string loginName = "", password = "", statuszUzenet = "";
     private bool isBusy = false, isFinished = false, showReview = false, viewModeOnly = false, vegeredmenyLathato = false;
@@ -428,68 +440,51 @@
         return vList;
     }
 
-    // JAVÍTVA: AUTOMATIKUS LÉPTETÉS A VÁLASZ UTÁN
     private async Task SubmitAnswer(long qId, Valasz v)
     {
-        if (viewModeOnly || bejelentkezettTanulo == null || isBusy) return;
+        if (viewModeOnly || bejelentkezettTanulo == null) return;
+        adottValaszok[qId] = v.ValaszId;
+        if (v.Helyes) pontszam++;
 
-        isBusy = true; // Zároljuk a felületet a mentés idejére
-        try
+        // JAVÍTÁS: Update hívásnál is átadjuk az FK azonosítókat (TanuloId, TesztId)
+        if (aktualisEredmenyId == null)
         {
-            adottValaszok[qId] = v.ValaszId;
-            if (v.Helyes) pontszam++;
-
-            if (aktualisEredmenyId == null)
+            var ujEredmeny = new Eredmeny
             {
-                var ujEredmeny = new Eredmeny
-                {
-                    TanuloId = bejelentkezettTanulo.TanuloId,
-                    TesztId = aktivTesztId!.Value,
-                    Pontszam = pontszam,
-                    OsszKerdes = kerdesek!.Count,
-                    Szazalek = GetSzazalek(),
-                    Befejezve = false
-                };
-                var resp = await Db.From<Eredmeny>().Insert(ujEredmeny);
-                aktualisEredmenyId = resp.Model.EredmenyId;
-            }
-            else
-            {
-                var frissit = new Eredmeny
-                {
-                    EredmenyId = aktualisEredmenyId.Value,
-                    TanuloId = bejelentkezettTanulo.TanuloId,
-                    TesztId = aktivTesztId!.Value,
-                    Pontszam = pontszam,
-                    OsszKerdes = kerdesek!.Count,
-                    Szazalek = GetSzazalek(),
-                    Befejezve = false
-                };
-                await Db.From<Eredmeny>().Update(frissit);
-            }
-
-            await Db.From<DiakValasz>().Insert(new DiakValasz
+                TanuloId = bejelentkezettTanulo.TanuloId,
+                TesztId = aktivTesztId!.Value,
+                Pontszam = pontszam,
+                OsszKerdes = kerdesek!.Count,
+                Szazalek = GetSzazalek(),
+                Befejezve = false
+            };
+            var resp = await Db.From<Eredmeny>().Insert(ujEredmeny);
+            aktualisEredmenyId = resp.Model.EredmenyId;
+        }
+        else
+        {
+            var frissit = new Eredmeny
             {
                 EredmenyId = aktualisEredmenyId.Value,
-                KerdesId = qId,
-                ValasztottValaszId = v.ValaszId
-            });
+                TanuloId = bejelentkezettTanulo.TanuloId, // <--- Fontos a Foreign Key kényszer miatt!
+                TesztId = aktivTesztId!.Value,             // <--- Fontos a Foreign Key kényszer miatt!
+                Pontszam = pontszam,
+                OsszKerdes = kerdesek!.Count,
+                Szazalek = GetSzazalek(),
+                Befejezve = false
+            };
+            await Db.From<Eredmeny>().Update(frissit);
+        }
 
-            // AUTOMATIKUS UGRÁS A KÖVETKEZŐRE
-            if (currentStep < kerdesek!.Count - 1)
-            {
-                currentStep++;
-            }
-            else
-            {
-                await Finish();
-            }
-        }
-        finally
+        await Db.From<DiakValasz>().Insert(new DiakValasz
         {
-            isBusy = false;
-        }
+            EredmenyId = aktualisEredmenyId.Value,
+            KerdesId = qId,
+            ValasztottValaszId = v.ValaszId
+        });
     }
+
+    private async Task NextStep() { if (currentStep < kerdesek!.Count - 1) currentStep++; else await Finish(); }
 
     private async Task Finish()
     {
@@ -501,9 +496,6 @@
                 EredmenyId = aktualisEredmenyId.Value,
                 TanuloId = bejelentkezettTanulo.TanuloId,
                 TesztId = aktivTesztId!.Value,
-                Pontszam = pontszam,
-                OsszKerdes = kerdesek!.Count,
-                Szazalek = GetSzazalek(),
                 Befejezve = true,
                 Kitoltve = DateTime.Now
             };
