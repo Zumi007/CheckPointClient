@@ -27,5 +27,11 @@ namespace CheckPointClient.Models
 
         [Column("Aktiv")]
         public bool Aktiv { get; set; } = true;
+
+        [Column("auth_id")]
+        public string? AuthId { get; set; }
+
+        [Column("is_admin")]
+        public bool IsAdmin { get; set; } = false;
     }
 }
