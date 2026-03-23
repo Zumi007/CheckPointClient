@@ -174,7 +174,7 @@
                             <div class="row mb-4 align-items-center">
                                 <div class="col-md-4 text-center border-end border-secondary">
                                     <div class="text-muted small text-uppercase">Pont</div>
-                                    <div class="display-6 fw-bold text-primary">@pontszam / @kerdesek.Count</div>
+                                    <div class="display-6 fw-bold text-primary">@pontszam / @osszesKerdesSzama</div>
                                 </div>
                                 <div class="col-md-4 text-center border-end border-secondary">
                                     <div class="text-muted small text-uppercase">Eredmény</div>
@@ -200,17 +200,15 @@
                             @if (showReview && vegeredmenyLathato)
                             {
                                 <div class="text-start border-top border-secondary pt-4 mt-4 animate-fade">
-                                    @foreach (var q in kerdesek)
+                                    @foreach (var q in (eredetiKerdesekLista ?? new List<Kerdes>()))
                                     {
-                                        // JAVÍTVA: Először a szinkronizált szótárban keressük a válasz ID-t
                                         long vId = felhasznaloValaszai.ContainsKey(q.KerdesId) ? felhasznaloValaszai[q.KerdesId] : -1;
-
                                         var vObj = valaszok?.FirstOrDefault(v => v.ValaszId == vId);
                                         bool helyes = vObj?.Helyes ?? false;
 
                                         <div class="card bg-black bg-opacity-25 @(vId == -1 ? "border-secondary" : (helyes ? "border-success" : "border-danger")) border-opacity-25 mb-3 shadow-sm">
                                             <div class="card-body">
-                                                <p class="fw-bold mb-3 text-light">@q.KerdesSzoveg</p>
+                                                <p class="fw-bold mb-3 text-light" style="white-space: pre-line;">@q.KerdesSzoveg?.Replace("\\n", "\n")</p>
                                                 <div class="p-2 mb-2 @(vId == -1 ? "bg-secondary" : (helyes ? "bg-success" : "bg-danger")) bg-opacity-10 border rounded small">
                                                     <strong class="text-light">Te válaszod:</strong>
                                                     <span class="text-light">@(vObj?.ValaszSzoveg ?? "Nem érkezett válasz")</span>
@@ -229,15 +227,16 @@
                         </div>
                     </div>
                 }
-                else
+                else if (kerdesek != null && currentStep < kerdesek.Count)
                 {
                     var q = kerdesek[currentStep];
                     <div class="card bg-dark border-secondary shadow-lg overflow-hidden animate-fade">
                         <div class="progress rounded-0" style="height: 10px;">
-                            <div class="progress-bar progress-bar-animated bg-primary" style="width: @((currentStep + 1.0) / kerdesek.Count * 100)%"></div>
+                            <!-- Progress kiszámítása a válaszolt kérdések alapján -->
+                            <div class="progress-bar progress-bar-animated bg-primary" style="width: @((felhasznaloValaszai.Count + 1.0) / osszesKerdesSzama * 100)%"></div>
                         </div>
                         <div class="card-body p-5">
-                            <h3 class="mb-5 fw-bold text-light">@q.KerdesSzoveg</h3>
+                            <h3 class="mb-5 fw-bold text-light" style="white-space: pre-line;">@q.KerdesSzoveg?.Replace("\\n", "\n")</h3>
                             <div class="d-grid gap-3">
                                 @foreach (var v in MegjelenitendoValaszok(q.KerdesId))
                                 {
@@ -287,10 +286,10 @@
 </style>
 
 @code {
-    private string AppVersion = "v2.2.0-final-sync";
+    private string AppVersion = "v2.2.1-fix-sync";
     private Tanulo? bejelentkezettTanulo;
     private string loginName = "", password = "", statuszUzenet = "";
-    private bool isBusy = false, isFinished = false, showReview = false, viewModeOnly = false, vegeredmenyLathato = false;
+    private bool isBusy = false, isFinished = false, showReview = false, viewModeOnly = false, vegeredmenyLathato = false, valaszokVeletlen = false;
 
     private class KiosztasAdat
     {
@@ -301,15 +300,14 @@
 
     private List<KiosztasAdat>? kiosztottAdatok;
     private long? aktivTesztId, aktualisEredmenyId;
-    private List<Kerdes>? kerdesek;
+    private List<Kerdes>? kerdesek; // Ez az aktuálisan mutatott (szűrt) lista
+    private List<Kerdes>? eredetiKerdesekLista; // Az áttekintéshez kell a teljes lista
     private List<Valasz>? valaszok;
-    private int currentStep = 0, pontszam = 0;
+    private int currentStep = 0, pontszam = 0, osszesKerdesSzama = 0;
     private Dictionary<long, List<Valasz>> kevertValaszokCache = new();
-
-    // Szótár a válaszoknak
     private Dictionary<long, long> felhasznaloValaszai = new();
 
-    private int GetSzazalek() => kerdesek != null && kerdesek.Count > 0 ? (int)Math.Round((decimal)pontszam / kerdesek.Count * 100) : 0;
+    private int GetSzazalek() => osszesKerdesSzama > 0 ? (int)Math.Round((decimal)pontszam / osszesKerdesSzama * 100) : 0;
     private int GetGradeNumber()
     {
         var sz = GetSzazalek();
@@ -355,7 +353,7 @@
             {
                 Kiosztas = k,
                 Teszt = tResp.Models.FirstOrDefault(t => t.TesztId == k.TesztId) ?? new Teszt(),
-                UtolsoEredmeny = eResp.Models.Where(e => e.TesztId == k.TesztId).OrderByDescending(e => e.Kitoltve).FirstOrDefault()
+                UtolsoEredmeny = eResp.Models.Where(e => e.TanuloId == bejelentkezettTanulo.TanuloId && e.TesztId == k.TesztId).OrderByDescending(e => e.Kitoltve).FirstOrDefault()
             }).ToList();
         }
         finally { isBusy = false; StateHasChanged(); }
@@ -368,24 +366,54 @@
     {
         aktivTesztId = elem.Teszt.TesztId;
         vegeredmenyLathato = elem.Kiosztas.VegeredmenyLathato;
-        currentStep = 0; pontszam = 0; isFinished = false;
+        valaszokVeletlen = elem.Kiosztas.ValaszokVeletlen;
+        currentStep = 0;
+        pontszam = 0;
+        isFinished = false;
         kevertValaszokCache.Clear();
         felhasznaloValaszai.Clear();
 
+        // Minden kérdés és válasz betöltése
         var kResp = await Db.From<Kerdes>().Filter("Teszt_id", Operator.Equals, elem.Teszt.TesztId.ToString()).Get();
-        kerdesek = kResp.Models;
+        eredetiKerdesekLista = kResp.Models;
+        osszesKerdesSzama = eredetiKerdesekLista.Count;
+
         var vResp = await Db.From<Valasz>().Get();
         valaszok = vResp.Models;
 
+        // Szinkronizálás az adatbázissal
         if (elem.UtolsoEredmeny != null)
         {
             aktualisEredmenyId = elem.UtolsoEredmeny.EredmenyId;
             await SzinkronizalasAdatbazisbol(elem.UtolsoEredmeny.EredmenyId);
         }
-        else aktualisEredmenyId = null;
+        else
+        {
+            aktualisEredmenyId = null;
+        }
+
+        // Kérdéslista összeállítása (szűrés a már megválaszoltakra, ha nem review mód)
+        if (!viewModeOnly)
+        {
+            kerdesek = eredetiKerdesekLista
+                .Where(q => !felhasznaloValaszai.ContainsKey(q.KerdesId))
+                .ToList();
+
+            // Keverés ha kérve van
+            if (elem.Kiosztas.KerdesekVeletlen && kerdesek != null)
+            {
+                var rng = new Random();
+                kerdesek = kerdesek.OrderBy(x => rng.Next()).ToList();
+            }
+        }
+        else
+        {
+            kerdesek = eredetiKerdesekLista;
+        }
+        
+        StateHasChanged();
     }
 
-    // ÚJ METÓDUS: Biztosítja, hogy a válaszok szinkronban legyenek az adatbázissal
     private async Task SzinkronizalasAdatbazisbol(long eredmenyId)
     {
         try
@@ -395,7 +423,8 @@
             foreach (var dv in dvResp.Models)
             {
                 felhasznaloValaszai[dv.KerdesId] = dv.ValasztottValaszId;
-                if (valaszok?.FirstOrDefault(x => x.ValaszId == dv.ValasztottValaszId)?.Helyes == true) pontszam++;
+                if (valaszok?.FirstOrDefault(x => x.ValaszId == dv.ValasztottValaszId)?.Helyes == true)
+                    pontszam++;
             }
         }
         catch { }
@@ -405,7 +434,15 @@
     {
         if (kevertValaszokCache.ContainsKey(kid)) return kevertValaszokCache[kid];
         var list = valaszok?.Where(x => x.KerdesId == kid).ToList() ?? new List<Valasz>();
-        kevertValaszokCache[kid] = list; return list;
+        
+        if (valaszokVeletlen)
+        {
+            var rng = new Random();
+            list = list.OrderBy(x => rng.Next()).ToList();
+        }
+        
+        kevertValaszokCache[kid] = list;
+        return list;
     }
 
     private async Task SubmitAnswer(long qId, Valasz v)
@@ -414,26 +451,39 @@
         isBusy = true;
         try
         {
-            // Mentés memóriába
             felhasznaloValaszai[qId] = v.ValaszId;
-
             if (v.Helyes) pontszam++;
+
+            // Eredmény tábla frissítése (mindig a teljes darabszámhoz viszonyítva)
+            var updateE = new Eredmeny
+            {
+                TanuloId = bejelentkezettTanulo!.TanuloId,
+                TesztId = aktivTesztId!.Value,
+                Pontszam = pontszam,
+                OsszKerdes = osszesKerdesSzama,
+                Szazalek = GetSzazalek(),
+                Befejezve = false
+            };
 
             if (aktualisEredmenyId == null)
             {
-                var ujE = new Eredmeny { TanuloId = bejelentkezettTanulo!.TanuloId, TesztId = aktivTesztId!.Value, Pontszam = pontszam, OsszKerdes = kerdesek!.Count, Szazalek = GetSzazalek(), Befejezve = false };
-                var resp = await Db.From<Eredmeny>().Insert(ujE);
+                var resp = await Db.From<Eredmeny>().Insert(updateE);
                 aktualisEredmenyId = resp.Model.EredmenyId;
             }
             else
             {
-                var updateE = new Eredmeny { EredmenyId = aktualisEredmenyId.Value, TanuloId = bejelentkezettTanulo!.TanuloId, TesztId = aktivTesztId!.Value, Pontszam = pontszam, OsszKerdes = kerdesek!.Count, Szazalek = GetSzazalek(), Befejezve = false };
+                updateE.EredmenyId = aktualisEredmenyId.Value;
                 await Db.From<Eredmeny>().Update(updateE);
             }
 
+            // Diák válaszának mentése
             await Db.From<DiakValasz>().Insert(new DiakValasz { EredmenyId = aktualisEredmenyId.Value, KerdesId = qId, ValasztottValaszId = v.ValaszId });
 
-            if (currentStep < kerdesek!.Count - 1) currentStep++; else await Finish();
+            // Következő kérdésre lépés (a maradék listában)
+            if (currentStep < kerdesek!.Count - 1)
+                currentStep++;
+            else
+                await Finish();
         }
         finally { isBusy = false; }
     }
@@ -441,30 +491,22 @@
     private async Task Finish()
     {
         if (aktualisEredmenyId == null) return;
-
         isBusy = true;
-        StateHasChanged();
-
         try
         {
-            // Végső állapot mentése az adatbázisba
             var vegE = new Eredmeny
             {
                 EredmenyId = aktualisEredmenyId!.Value,
                 TanuloId = bejelentkezettTanulo!.TanuloId,
                 TesztId = aktivTesztId!.Value,
                 Pontszam = pontszam,
-                OsszKerdes = kerdesek!.Count,
+                OsszKerdes = osszesKerdesSzama,
                 Szazalek = GetSzazalek(),
                 Befejezve = true,
                 Kitoltve = DateTime.Now
             };
             await Db.From<Eredmeny>().Update(vegE);
-
-            // JAVÍTVA: A biztonság kedvéért itt is lefrissítjük a válaszokat az adatbázisból,
-            // mielőtt átváltanánk a kiértékelő nézetre
             await SzinkronizalasAdatbazisbol(aktualisEredmenyId.Value);
-
             isFinished = true;
         }
         finally
