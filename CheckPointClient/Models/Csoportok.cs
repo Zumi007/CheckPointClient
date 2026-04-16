@@ -14,5 +14,5 @@ namespace CheckPointClient.Models
 
         [Column("Aktiv")]
         public bool Aktiv { get; set; } = true;
-    }
+    } 
 }
